@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OOP Quiz — SIT771</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --surface2: #f2f1ed;
+  --border: #e4e2db;
+  --border2: #ccc9c0;
+  --text: #1a1916;
+  --muted: #7a7870;
+  --subtle: #b0ae a6;
+  --accent: #2c5f2e;
+  --accent-light: #eef4ee;
+  --accent2: #1e4220;
+  --danger: #8b1a1a;
+  --danger-light: #fdf0f0;
+  --success: #1a4d1c;
+  --success-light: #f0f7f0;
+  --mono: 'DM Mono', monospace;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Outfit', sans-serif;
+  --r: 10px;
+  --r-sm: 6px;
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 16px 64px;
+}
+
+.screen { display: none; width: 100%; max-width: 520px; }
+.screen.active { display: block; }
+
+/* ── HOME ── */
+.home-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.home-title {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+.home-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.home-desc {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 300;
+  margin-bottom: 36px;
+  max-width: 380px;
+  line-height: 1.7;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 28px 0;
+}
+
+.topic-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 36px;
+}
+.topic {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.meta-item { font-size: 13px; color: var(--muted); font-weight: 300; display: flex; align-items: center; gap: 6px; }
+.meta-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border2); }
+
+.start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  padding: 13px 32px;
+  border-radius: var(--r);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.start-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.start-btn:active { transform: translateY(0); opacity: 1; }
+
+/* ── HUD ── */
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+.hud-left { display: flex; align-items: center; gap: 12px; }
+.lives { display: flex; gap: 4px; }
+.heart { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); transition: opacity 0.3s; }
+.heart.lost { opacity: 0.15; }
+.q-num { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+.prog-wrap { flex: 1; }
+.prog-bar { height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s ease; }
+
+.streak-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px solid #c5dac5;
+  border-radius: 4px;
+  padding: 3px 8px;
+  display: none;
+  white-space: nowrap;
+}
+.streak-tag.show { display: block; }
+
+/* ── Card ── */
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+}
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  30% { transform: translateX(-5px); }
+  70% { transform: translateX(5px); }
+}
+
+.q-cat {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.q-text {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+
+.q-code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  color: #3d5a40;
+  margin-bottom: 20px;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.8;
+  display: none;
+}
+
+.options { display: flex; flex-direction: column; gap: 8px; }
+
+.opt {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+}
+.opt:hover:not(:disabled) {
+  border-color: var(--border2);
+  background: var(--surface2);
+}
+.opt:disabled { cursor: default; }
+.opt.correct { border-color: #a8c5a0 !important; background: var(--success-light) !important; }
+.opt.wrong   { border-color: #c5a0a0 !important; background: var(--danger-light)  !important; animation: shake 0.3s ease; }
+
+.opt-letter {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--surface);
+  transition: all 0.15s;
+}
+.opt.correct .opt-letter { color: var(--success); border-color: #a8c5a0; background: #e0efe0; }
+.opt.wrong   .opt-letter { color: var(--danger);  border-color: #c5a0a0; background: #f5e0e0; }
+
+.feedback {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.65;
+  display: none;
+  border-left: 3px solid transparent;
+}
+.feedback.show { display: block; animation: fadeSlide 0.2s ease; }
+.feedback.correct { background: var(--success-light); border-left-color: #a8c5a0; color: #2a4a2c; }
+.feedback.wrong   { background: var(--danger-light);  border-left-color: #c5a0a0; color: #4a2a2a; }
+.feedback strong { font-weight: 600; }
+
+.next-btn {
+  display: none;
+  margin-top: 14px;
+  width: 100%;
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.next-btn.show { display: block; animation: fadeSlide 0.2s ease; }
+.next-btn:hover { opacity: 0.8; }
+
+/* ── Result ── */
+.result-wrap { animation: fadeSlide 0.4s ease; }
+
+.result-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.result-title {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.result-title em { font-style: italic; color: var(--accent); }
+
+.result-score {
+  font-family: var(--serif);
+  font-size: 4rem;
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1;
+  margin: 20px 0 4px;
+}
+
+.result-score-sub { font-size: 13px; color: var(--muted); font-weight: 300; margin-bottom: 28px; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.stat-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 12px;
+  text-align: center;
+}
+.stat-val { font-family: var(--serif); font-size: 1.5rem; font-weight: 400; color: var(--text); }
+.stat-lbl { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+
+.result-msg {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 28px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  border-left: 3px solid var(--border2);
+}
+
+.result-btns { display: flex; gap: 10px; }
+.r-btn {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 11px 24px;
+  border-radius: var(--r-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.r-btn.primary { background: var(--text); color: var(--bg); flex: 1; }
+.r-btn.primary:hover { opacity: 0.8; }
+.r-btn.ghost { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+.r-btn.ghost:hover { border-color: var(--border2); color: var(--text); }
+
+@media (max-width: 480px) {
+  body { padding: 32px 14px 48px; }
+  .q-card { padding: 20px 16px; }
+  .home-title { font-size: 1.8rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HOME ── -->
+<div class="screen active" id="home">
+  <p class="home-eyebrow">SIT771 · Object-Oriented Development</p>
+  <h1 class="home-title">Test your<br><em>OOP knowledge</em></h1>
+  <p class="home-desc">10 questions across the core concepts of object-oriented programming in C#. Instant feedback, plain explanations.</p>
+
+  <div class="topic-list">
+    <span class="topic">classes & objects</span>
+    <span class="topic">encapsulation</span>
+    <span class="topic">inheritance</span>
+    <span class="topic">polymorphism</span>
+    <span class="topic">abstraction</span>
+    <span class="topic">interfaces</span>
+    <span class="topic">constructors</span>
+    <span class="topic">composition</span>
+    <span class="topic">properties</span>
+    <span class="topic">static</span>
+  </div>
+
+  <div class="meta-row">
+    <span class="meta-item">10 questions</span>
+    <span class="meta-dot"></span>
+    <span class="meta-item">3 lives</span>
+    <span class="meta-dot"></span>
+    <span class="meta-item">No login</span>
+    <span class="meta-dot"></span>
+    <span class="meta-item">Works offline</span>
+  </div>
+
+  <button class="start-btn" onclick="startQuiz()">Begin quiz &rarr;</button>
+</div>
+
+<!-- ── QUIZ ── -->
+<div class="screen" id="quiz">
+  <div class="hud">
+    <div class="hud-left">
+      <div class="lives" id="lives"></div>
+      <span class="q-num" id="qnum"></span>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" id="prog"></div></div>
+    </div>
+    <span class="streak-tag" id="streak"></span>
+  </div>
+
+  <div class="q-card" id="qcard">
+    <div class="q-cat" id="qcat"></div>
+    <div class="q-text" id="qtext"></div>
+    <div class="q-code" id="qcode"></div>
+    <div class="options" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nxt" onclick="next()"></button>
+  </div>
+</div>
+
+<!-- ── RESULT ── -->
+<div class="screen" id="result">
+  <div class="result-wrap">
+    <p class="result-eyebrow">Quiz complete</p>
+    <h2 class="result-title" id="rtitle"></h2>
+    <div class="result-score" id="rscore"></div>
+    <p class="result-score-sub" id="rscoresub"></p>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-val" id="rcorrect"></div><div class="stat-lbl">Correct</div></div>
+      <div class="stat-box"><div class="stat-val" id="rstreak"></div><div class="stat-lbl">Best streak</div></div>
+      <div class="stat-box"><div class="stat-val" id="rlives"></div><div class="stat-lbl">Lives left</div></div>
+    </div>
+    <p class="result-msg" id="rmsg"></p>
+    <div class="result-btns">
+      <button class="r-btn primary" onclick="startQuiz()">Try again</button>
+      <button class="r-btn ghost" onclick="show('home')">Home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const QS = [
+  {
+    cat: "Classes & objects",
+    q: "What is a class in object-oriented programming?",
+    opts: ["A blueprint for creating objects", "A running instance of a program", "A method that returns a value", "A type of loop"],
+    ans: 0,
+    exp: "A class is a blueprint — it defines structure and behaviour. Objects are instances built from it. Think of DNA as the class; a protein expressed from it is the object."
+  },
+  {
+    cat: "Encapsulation",
+    q: "Which access modifier restricts a member to within its own class only?",
+    opts: ["public", "protected", "private", "internal"],
+    ans: 2,
+    exp: "private locks a member inside its class. Like a cell membrane — it controls what passes in and out, hiding internal mechanisms from the outside world."
+  },
+  {
+    cat: "Inheritance",
+    q: "What syntax does C# use to inherit from a base class?",
+    code: "class Dog ___ Animal { }",
+    opts: ["extends", "implements", "inherits", ":"],
+    ans: 3,
+    exp: "C# uses a colon — class Dog : Animal { }. Java uses 'extends'. The colon tells the compiler Dog inherits all of Animal's members."
+  },
+  {
+    cat: "Polymorphism",
+    q: "Method overloading and method overriding are different. Overloading means:",
+    opts: ["Same name, same parameters", "Same name, different parameters", "A method calling itself recursively", "Replacing a parent class method"],
+    ans: 1,
+    exp: "Overloading = same name, different signatures — the compiler picks the right one at compile time. Overriding = replacing a base class method at runtime via inheritance."
+  },
+  {
+    cat: "Constructors",
+    q: "When is a constructor automatically invoked?",
+    opts: ["When the program starts", "When any method is called", "When an object is created with new", "When the class file is loaded"],
+    ans: 2,
+    exp: "A constructor runs each time you write new ClassName(). It initialises the object's state — like a cell's setup process when it's first created."
+  },
+  {
+    cat: "Abstraction",
+    q: "Which statement about abstract classes is correct?",
+    code: "abstract class Shape {\n  public abstract double Area();\n}",
+    opts: ["They can be instantiated directly", "They cannot be instantiated; they must be subclassed", "All their methods must be abstract", "They cannot have constructors"],
+    ans: 1,
+    exp: "Abstract classes can't be created directly — they're templates. They can mix abstract methods (no body) and concrete methods (with body). You inherit from them to use them."
+  },
+  {
+    cat: "Interfaces",
+    q: "How many base classes and interfaces can a C# class have?",
+    opts: ["Multiple base classes, one interface", "One base class, multiple interfaces", "One of each", "Unlimited of both"],
+    ans: 1,
+    exp: "C# enforces single class inheritance — only one base class. But a class can implement as many interfaces as needed, allowing multiple capabilities to be composed cleanly."
+  },
+  {
+    cat: "Composition",
+    q: "A Player class contains a List<Bullet>. What OOP relationship is this?",
+    opts: ["Inheritance — Player is-a Bullet", "Polymorphism", "Composition — Player has-a list of Bullets", "Abstraction"],
+    ans: 2,
+    exp: "Has-a = composition. Is-a = inheritance. Player owns and manages the bullet list — bullets only exist as long as the player does. Favour composition over inheritance where possible."
+  },
+  {
+    cat: "Properties",
+    q: "What does this C# property declaration allow?",
+    code: "public int Speed { get; private set; }",
+    opts: ["Anyone can read and write Speed", "Anyone can read Speed; only this class can write it", "Speed is completely hidden from all callers", "Speed is a static shared value"],
+    ans: 1,
+    exp: "get; is public — anyone can read it. private set; means only code inside this class can change the value. This is a clean encapsulation pattern — expose what's needed, protect what isn't."
+  },
+  {
+    cat: "Static members",
+    q: "What is the key characteristic of a static method?",
+    opts: ["It requires an object instance to be called", "It belongs to the class itself, not any instance", "It can only access private fields", "It is called automatically when the program starts"],
+    ans: 1,
+    exp: "Static methods live on the class, not on objects. Call them as ClassName.Method() — no new needed. Math.Sqrt() is a classic example: you don't create a Math object first."
+  }
+];
+
+const LETTERS = ['A','B','C','D'];
+let cur=0, lives=3, streak=0, best=0, correct=0, answered=false;
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function renderLives() {
+  const el = document.getElementById('lives');
+  el.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const d = document.createElement('div');
+    d.className = 'heart' + (i >= lives ? ' lost' : '');
+    el.appendChild(d);
+  }
+}
+
+function startQuiz() {
+  cur=0; lives=3; streak=0; best=0; correct=0; answered=false;
+  show('quiz');
+  renderQ();
+}
+
+function renderQ() {
+  answered = false;
+  const q = QS[cur];
+
+  document.getElementById('prog').style.width = (cur / QS.length * 100) + '%';
+  document.getElementById('qnum').textContent = (cur + 1) + ' / ' + QS.length;
+  document.getElementById('qcat').textContent = q.cat;
+  document.getElementById('qtext').textContent = q.q;
+
+  const cd = document.getElementById('qcode');
+  if (q.code) { cd.textContent = q.code; cd.style.display = 'block'; }
+  else cd.style.display = 'none';
+
+  const el = document.getElementById('opts');
+  el.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = '<span class="opt-letter">' + LETTERS[i] + '</span>' + o;
+    b.onclick = () => pick(i, b);
+    el.appendChild(b);
+  });
+
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+
+  const nxt = document.getElementById('nxt');
+  nxt.className = 'next-btn';
+  nxt.textContent = cur === QS.length - 1 ? 'See results' : 'Continue';
+
+  const sk = document.getElementById('streak');
+  if (streak >= 2) { sk.className = 'streak-tag show'; sk.textContent = streak + ' in a row'; }
+  else sk.className = 'streak-tag';
+
+  renderLives();
+
+  const card = document.getElementById('qcard');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'fadeSlide 0.3s ease';
+}
+
+function pick(idx, btn) {
+  if (answered) return;
+  answered = true;
+
+  const q = QS[cur];
+  document.querySelectorAll('.opt').forEach(b => b.disabled = true);
+  document.querySelectorAll('.opt')[q.ans].classList.add('correct');
+
+  const fb = document.getElementById('fb');
+
+  if (idx === q.ans) {
+    streak++; correct++;
+    if (streak > best) best = streak;
+    fb.className = 'feedback correct show';
+    fb.innerHTML = '<strong>Correct.</strong> ' + q.exp;
+  } else {
+    btn.classList.add('wrong');
+    streak = 0; lives--;
+    fb.className = 'feedback wrong show';
+    fb.innerHTML = '<strong>Not quite.</strong> ' + q.exp;
+    renderLives();
+    if (lives <= 0) { setTimeout(showResult, 1600); return; }
+  }
+
+  document.getElementById('nxt').className = 'next-btn show';
+}
+
+function next() {
+  cur++;
+  if (cur >= QS.length) { showResult(); return; }
+  renderQ();
+}
+
+function showResult() {
+  show('result');
+  const pct = Math.round(correct / QS.length * 100);
+
+  const tiers = [
+    { title: "Keep going", msg: "OOP concepts take time to settle — review the explanations carefully and try again. Focus on the ones where the analogy didn't click." },
+    { title: "Solid start", msg: "You've got the foundations. The questions you missed tend to be about the subtler distinctions — overloading vs overriding, composition vs aggregation. Worth reviewing those." },
+    { title: "Well done", msg: "Strong command of the material. You're clearly comfortable with the core pillars and can distinguish the finer points. Ready for design patterns." },
+    { title: "Excellent", msg: "Every concept nailed, including the nuanced ones. This reflects the depth expected at master's level — clean understanding without oversimplification." }
+  ];
+
+  const tier = pct < 50 ? 0 : pct < 70 ? 1 : pct < 90 ? 2 : 3;
+  const t = tiers[tier];
+
+  document.getElementById('rtitle').innerHTML = t.title + ' &mdash; <em>' + pct + '%</em>';
+  document.getElementById('rscore').textContent = correct + '/' + QS.length;
+  document.getElementById('rscoresub').textContent = 'questions answered correctly';
+  document.getElementById('rcorrect').textContent = correct;
+  document.getElementById('rstreak').textContent = best;
+  document.getElementById('rlives').textContent = Math.max(lives, 0);
+  document.getElementById('rmsg').textContent = t.msg;
+}
+</script>
+</body>
+</html>
